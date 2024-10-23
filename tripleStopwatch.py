@@ -1,4 +1,5 @@
 import tkinter as tk
+import json
 import os
 
 from time import sleep
@@ -6,64 +7,45 @@ from threading import Thread
 from winsound import PlaySound, SND_ASYNC
 from tkinter import font
 
-'''
-from openpyxl import load_workbook
-
-fn = 'C:\\db\\db.xlsx'
-wb = load_workbook(fn)
-ws = wb['data']
-A1 = ws['A1']
-B1 = ws['B1']
-A2 = ws['A2']
-B2 = ws['B2']
-A3 = ws['A3']
-B3 = ws['B3']
-count1_1 = A1.value
-count1_2 = B1.value
-count2_1 = A2.value
-count2_2 = B2.value
-count3_1 = A3.value
-count3_2 = B3.value
-'''
-
-count1_1 = 0
-count1_2 = 0
-count2_1 = 0
-count2_2 = 0
-count3_1 = 0
-count3_2 = 0
-
-# Finding a path for sound
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sound_path = os.path.join(script_dir, 'sound.wav')
+
+with open('db.json', 'r') as db:
+    data = json.load(db)
+
+counter_1_1 = data['counter_1_1']
+counter_1_2 = data['counter_1_2']
+counter_2_1 = data['counter_2_1']
+counter_2_2 = data['counter_2_2']
+counter_3_1 = data['counter_3_1']
+counter_3_2 = data['counter_3_2']
 
 
 def thread(func):  # Decorator for separating functions into threads
     def wrapper(*args, **kwargs):
-        current_thread = Thread(
-            target=func, args=args, kwargs=kwargs, daemon=True)
+        current_thread = Thread(target=func, args=args, kwargs=kwargs, daemon=True)
         current_thread.start()
     return wrapper
 
 
 @thread
-def start(quantity_entry, counter_1, counter_2, label_count_1, label_count_2, timer_label):
+def start(quantity_entry, radiobutton, counter_1, counter_2, label_count_1, label_count_2, timer_label):
+    global counter_1_1, counter_1_2, counter_2_1, counter_2_2, counter_3_1, counter_3_2
     __duration = 0
     if (quantity_entry.get()).isdigit() is True:
-        __duration = int(quantityEntry1.get())
+        __duration = int(quantity_entry.get())
 
-        selected_counter = rb1.get()
+        selected_counter = radiobutton.get()
         if selected_counter == 1:
-            counter_1 += 1
-            label_count_1['text'] = counter_1
+            counter_1[0] += 1
+            label_count_1['text'] = str(counter_1[0])
             label_count_1.update()
         elif selected_counter == 2:
-            counter_2 += 1
-            label_count_2['text'] = counter_2
+            counter_2[0] += 1
+            label_count_2['text'] = str(counter_2[0])
             label_count_2.update()
 
         while __duration >= 0:
-
             if __duration > 0:
                 timer_label['foreground'] = '#1f1'
 
@@ -75,19 +57,40 @@ def start(quantity_entry, counter_1, counter_2, label_count_1, label_count_2, ti
             sleep(1)
             __duration -= 1
 
+        data['counter_1_1'] = counter_1_1
+        data['counter_1_2'] = counter_1_2
+        data['counter_2_1'] = counter_2_1
+        data['counter_2_2'] = counter_2_2
+        data['counter_3_1'] = counter_3_1
+        data['counter_3_2'] = counter_3_2
+
+        with open('db.json', 'w') as file:
+            json.dump(data, file)
+
 
 def key_start(event):
     if event.keysym == 'Left':
-        start(quantityEntry1, count1_1, count1_2, labelCount1_1, labelCount1_2, timerLabel1)
+        start(quantityEntry1, rb1, counter_1_1, counter_1_2, labelCount1_1, labelCount1_2, timerLabel1)
     if event.keysym == 'Down':
-        start(quantityEntry2, count2_1, count2_2, labelCount2_1, labelCount2_2, timerLabel2)
+        start(quantityEntry2, rb2, counter_2_1, counter_2_2, labelCount2_1, labelCount2_2, timerLabel2)
     if event.keysym == 'Right':
-        start(quantityEntry3, count3_1, count3_2, labelCount3_1, labelCount3_2, timerLabel3)
+        start(quantityEntry3, rb3, counter_3_1, counter_3_2, labelCount3_1, labelCount3_2, timerLabel3)
 
 
 def reset(counter, label):
-    counter = 0
+    global counter_1_1, counter_1_2, counter_2_1, counter_2_2, counter_3_1, counter_3_2
+    counter[0] = 0
+
+    data['counter_1_1'] = counter_1_1
+    data['counter_1_2'] = counter_1_2
+    data['counter_2_1'] = counter_2_1
+    data['counter_2_2'] = counter_2_2
+    data['counter_3_1'] = counter_3_1
+    data['counter_3_2'] = counter_3_2
+
     label['text'] = counter
+    with open('db.json', 'w') as file:
+        json.dump(data, file)
 
 
 # Creating a window
@@ -131,10 +134,10 @@ labelCount1_1.place(relx=0.5, rely=0.06, anchor=tk.N)
 labelCount1_2 = tk.Label(frame1, text='0', background='#111', foreground='#fff', font=font1)
 labelCount1_2.place(relx=0.5, rely=0.1, anchor=tk.N)
 
-btnReset1_1 = tk.Button(frame1, text='Reset', background='#111', foreground='#fff', font=font1, command=lambda: reset(count1_1, labelCount1_1))
+btnReset1_1 = tk.Button(frame1, text='Reset', background='#111', foreground='#fff', font=font1, command=lambda: reset(counter_1_1, labelCount1_1))
 btnReset1_1.place(relx=0.75, rely=0.055, anchor=tk.N)
 
-btnReset1_2 = tk.Button(frame1, text='Reset', background='#111', foreground='#fff', font=font1, command=lambda: reset(count1_2, labelCount1_2))
+btnReset1_2 = tk.Button(frame1, text='Reset', background='#111', foreground='#fff', font=font1, command=lambda: reset(counter_1_2, labelCount1_2))
 btnReset1_2.place(relx=0.75, rely=0.1, anchor=tk.N)
 
 timerLabel1 = tk.Label(frame1, text='000', background='#111', foreground='#1f1', font=font2)
@@ -146,7 +149,7 @@ quantityLabel1.place(relx=0.5, rely=0.8, anchor=tk.N)
 quantityEntry1 = tk.Entry(frame1, width=5, bg="white", font=font1)
 quantityEntry1.place(relx=0.5, rely=0.85, anchor=tk.N)
 
-startBtn1 = tk.Button(frame1, text='Press ← to start', background='#111', foreground='#fff', font=font1, command=lambda: start(quantityEntry1, count1_1, count1_2, labelCount1_1, labelCount1_2, timerLabel1))
+startBtn1 = tk.Button(frame1, text='Press ← to start', background='#111', foreground='#fff', font=font1, command=lambda: start(quantityEntry1, rb1, counter_1_1, counter_1_2, labelCount1_1, labelCount1_2, timerLabel1))
 startBtn1.place(relx=0.5, rely=0.9, anchor=tk.N)
 canvas.bind_all("<KeyPress-Left>", key_start)
 
@@ -168,10 +171,10 @@ labelCount2_1.place(relx=0.5, rely=0.06, anchor=tk.N)
 labelCount2_2 = tk.Label(frame2, text='0', background='#111', foreground='#fff', font=font1)
 labelCount2_2.place(relx=0.5, rely=0.1, anchor=tk.N)
 
-btnReset2_1 = tk.Button(frame2, text='Reset', background='#111', foreground='#fff', font=font1, command=lambda: reset(count2_1, labelCount2_1))
+btnReset2_1 = tk.Button(frame2, text='Reset', background='#111', foreground='#fff', font=font1, command=lambda: reset(counter_2_1, labelCount2_1))
 btnReset2_1.place(relx=0.75, rely=0.055, anchor=tk.N)
 
-btnReset2_2 = tk.Button(frame2, text='Reset', background='#111', foreground='#fff', font=font1, command=lambda: reset(count2_2, labelCount2_2))
+btnReset2_2 = tk.Button(frame2, text='Reset', background='#111', foreground='#fff', font=font1, command=lambda: reset(counter_2_2, labelCount2_2))
 btnReset2_2.place(relx=0.75, rely=0.1, anchor=tk.N)
 
 timerLabel2 = tk.Label(frame2, text='000', background='#111', foreground='#1f1', font=font2)
@@ -183,7 +186,7 @@ quantityLabel2.place(relx=0.5, rely=0.8, anchor=tk.N)
 quantityEntry2 = tk.Entry(frame2, width=5, bg="white", font=font1)
 quantityEntry2.place(relx=0.5, rely=0.85, anchor=tk.N)
 
-startBtn2 = tk.Button(frame2, text='Press ↓ to start', background='#111', foreground='#fff', font=font1, command=lambda: start(quantityEntry2, count2_1, count2_2, labelCount2_1, labelCount2_2, timerLabel2))
+startBtn2 = tk.Button(frame2, text='Press ↓ to start', background='#111', foreground='#fff', font=font1, command=lambda: start(quantityEntry2, rb2, counter_2_1, counter_2_2, labelCount2_1, labelCount2_2, timerLabel2))
 startBtn2.place(relx=0.5, rely=0.9, anchor=tk.N)
 canvas.bind_all("<KeyPress-Down>", key_start)
 
@@ -205,10 +208,10 @@ labelCount3_1.place(relx=0.5, rely=0.06, anchor=tk.N)
 labelCount3_2 = tk.Label(frame3, text='0', background='#111', foreground='#fff', font=font1)
 labelCount3_2.place(relx=0.5, rely=0.1, anchor=tk.N)
 
-btnReset3_1 = tk.Button(frame3, text='Reset', background='#111', foreground='#fff', font=font1, command=lambda: reset(count3_1, labelCount3_1))
+btnReset3_1 = tk.Button(frame3, text='Reset', background='#111', foreground='#fff', font=font1, command=lambda: reset(counter_3_1, labelCount3_1))
 btnReset3_1.place(relx=0.75, rely=0.055, anchor=tk.N)
 
-btnReset3_2 = tk.Button(frame3, text='Reset', background='#111', foreground='#fff', font=font1, command=lambda: reset(count3_2, labelCount3_2))
+btnReset3_2 = tk.Button(frame3, text='Reset', background='#111', foreground='#fff', font=font1, command=lambda: reset(counter_3_2, labelCount3_2))
 btnReset3_2.place(relx=0.75, rely=0.1, anchor=tk.N)
 
 timerLabel3 = tk.Label(frame3, text='000', background='#111', foreground='#1f1', font=font2)
@@ -220,27 +223,24 @@ quantityLabel3.place(relx=0.5, rely=0.8, anchor=tk.N)
 quantityEntry3 = tk.Entry(frame3, width=5, bg="white", font=font1)
 quantityEntry3.place(relx=0.5, rely=0.85, anchor=tk.N)
 
-startBtn3 = tk.Button(frame3, text='Press → to start', background='#111', foreground='#fff', font=font1, command=lambda: start(quantityEntry3, count3_1, count3_2, labelCount3_1, labelCount3_2, timerLabel3))
+startBtn3 = tk.Button(frame3, text='Press → to start', background='#111', foreground='#fff', font=font1, command=lambda: start(quantityEntry3, rb3, counter_3_1, counter_3_2, labelCount3_1, labelCount3_2, timerLabel3))
 startBtn3.place(relx=0.5, rely=0.9, anchor=tk.N)
 canvas.bind_all("<KeyPress-Right>", key_start)
 
 # Assigning values to counters when opening a program
-'''
-labelCount1_1['text'] = count1_1
+labelCount1_1['text'] = str(counter_1_1[0])
 labelCount1_1.update()
-labelCount1_2['text'] = count1_2
+labelCount1_2['text'] = str(counter_1_2[0])
 labelCount1_2.update()
-labelCount2_1['text'] = count2_1
+labelCount2_1['text'] = str(counter_2_1[0])
 labelCount2_1.update()
-labelCount2_2['text'] = count2_2
+labelCount2_2['text'] = str(counter_2_2[0])
 labelCount2_2.update()
-labelCount3_1['text'] = count3_1
+labelCount3_1['text'] = str(counter_3_1[0])
 labelCount3_1.update()
-labelCount3_2['text'] = count3_2
+labelCount3_2['text'] = str(counter_3_2[0])
 labelCount3_2.update()
-'''
 
-# Infinite loop for window operation
 root.mainloop()
 
 # Compilation
